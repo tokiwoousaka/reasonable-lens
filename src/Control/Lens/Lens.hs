@@ -8,7 +8,3 @@ import Control.Lens.Getter
 import Control.Lens.Setter
 
 type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
-
-----
-
-
