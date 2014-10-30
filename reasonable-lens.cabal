@@ -4,7 +4,7 @@
 name:                reasonable-lens
 version:             0.1.0.0
 -- synopsis:            
--- description:         
+description:         Just size lens implementation.
 homepage:            https://github.com/tokiwoousaka/reasonable-lens
 license:             MIT
 license-file:        LICENSE
@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  -- exposed-modules:     
+  exposed-modules:     Control.Lens
   -- other-modules:       
   build-depends:       base ==4.6.*
   hs-source-dirs:      src
