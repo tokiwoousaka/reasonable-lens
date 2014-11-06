@@ -17,10 +17,11 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:     Control.Lens
-  other-modules:       Control.Lens.Getter
+                     , Control.Lens.Getter
                      , Control.Lens.Lens
                      , Control.Lens.Setter
                      , Control.Lens.TH
                      , Control.Lens.Tuple
+--  other-modules:      
   build-depends:       base ==4.6.*, split ==0.2.*, template-haskell ==2.8.*
   hs-source-dirs:      src
