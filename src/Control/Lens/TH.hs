@@ -97,7 +97,7 @@ createLensTypeSig tvbs tn (VarT ft) = let
     b <- newName "b"
     qnl <- sequence $ map makeNameList tvbs
     res <- runQ [t| Lens $(typeCon tn a qnl) $(typeCon tn b qnl) $(varT a) $(varT b) |]
-    forallT ((map (PlainTV . snd) qnl) ++ PlainTV a:PlainTV b:[]) (return []) $ return res
+    forallT (map PlainTV $ map snd qnl ++ [a, b]) (return []) $ return res
 
 ---------------------------------------------------------------------------------------------------
 -- makeClassy
