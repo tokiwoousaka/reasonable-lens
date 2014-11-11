@@ -13,22 +13,22 @@ makeLenses :: Name -> DecsQ
 makeLenses n = do
   info <- reify n
   case info2Records info n of 
-    Left xs -> fmap concat . sequence $ map (createLensFunction n) xs
+    Left (tvbs, xs) -> fmap concat . sequence $ map (createLensFunction tvbs n) xs
     Right x -> error x
 
-info2Records :: Info -> Name -> Either [VarStrictType] String
-info2Records (TyConI (DataD _ _ _ (RecC _ xs:_) _)) _ = Left xs
+info2Records :: Info -> Name -> Either ([TyVarBndr], [VarStrictType]) String
+info2Records (TyConI (DataD _ _ tvbs (RecC _ xs:_) _)) _ = Left (tvbs, xs)
 info2Records _ name = Right $ "Type \"" ++ show name ++ "\" have not records."
 
-createLensFunction :: Name -> VarStrictType -> DecsQ
-createLensFunction n (v, s, t) = do 
+createLensFunction :: [TyVarBndr] -> Name -> VarStrictType -> DecsQ
+createLensFunction tvbs n (v, s, t) = do 
   name <- return $ getFuncName v
   case name of
     Just nm -> do
       exp <- createLensExp v 
       funName <- return $ mkName nm
       sequence 
-        [ sigD funName $ createLensTypeSig n t
+        [ sigD funName $ createLensTypeSig tvbs n t
         , funD funName [return $ Clause [] (NormalB exp) []]
         ]
     Nothing -> return []
@@ -43,12 +43,6 @@ getFuncName n = getn . last . endBy "." $ show n
 ----
 -- create expression
 -- TODO : refactor
-
---createLensSig :: Name -> Name -> Type -> ExpQ
---createLensSig fid tn ft = do
---  exp <- createLensExp fid
---  ts <- createLensTypeSig tn ft
---  return  $ SigE exp ts
 
 -- \fld -> (\f v -> fmap (\a -> v {fld = a} ) (f (fld v)))
 createLensExp :: Name -> ExpQ
@@ -74,14 +68,36 @@ makeUpd r f a = RecUpdE (VarE r) [(f, a)]
 
 -- \f g v -> f (g v)
 makeComp :: Name -> Name -> Name -> Exp
-makeComp f g v =  AppE (VarE f) (AppE (VarE g) (VarE v))
+makeComp f g v =  AppE (VarE f) $ AppE (VarE g) (VarE v)
 
--- type
-createLensTypeSig :: Name -> Type -> TypeQ
-createLensTypeSig tn ft = do
-  runQ [t| Lens $(n2ct tn) $(n2ct tn) $(return ft) $(return ft) |]
-    where
-      n2ct = return . ConT
+----
+-- types
+
+createLensTypeSig :: [TyVarBndr] -> Name -> Type -> TypeQ
+createLensTypeSig [] tn ft = runQ [t| Lens $(conT tn) $(conT tn) $(return ft) $(return ft) |]
+createLensTypeSig tvbs tn (VarT ft) = let
+
+  makeNameList :: TyVarBndr -> Q (TyVarBndr, Name)
+  makeNameList t = newName "t" >>= \x -> return (t, x)
+
+  judgeType :: Name -> (TyVarBndr, Name) -> TypeQ
+  judgeType n (PlainTV p, m) = varT $ if ft == p then n else m
+
+  nameList :: Name -> [(TyVarBndr, Name)] -> [TypeQ]
+  nameList n xs = map (judgeType n) xs
+
+  appCon :: Name -> [TypeQ] -> TypeQ
+  appCon n xs = foldl1 appT $ conT n : xs 
+
+  typeCon :: Name -> Name -> [(TyVarBndr, Name)] -> TypeQ
+  typeCon n m = appCon n . nameList m 
+
+  in do
+    a <- newName "a"
+    b <- newName "b"
+    qnl <- sequence $ map makeNameList tvbs
+    res <- runQ [t| Lens $(typeCon tn a qnl) $(typeCon tn b qnl) $(varT a) $(varT b) |]
+    forallT ((map (PlainTV . snd) qnl) ++ PlainTV a:PlainTV b:[]) (return []) $ return res
 
 ---------------------------------------------------------------------------------------------------
 -- makeClassy
