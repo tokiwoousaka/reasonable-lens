@@ -109,19 +109,19 @@ createLensTypeSig tvbs tn ty = do
       jgName xs ((n1, n2), n3) = if elem n1 xs then (n1, n3) else (n1, n2)
 
 trace1 tvbs tn ty = do
-      putStrLn "------------------------"
-      putStrLn $ "tvbs     = " ++ show tvbs
-      putStrLn $ "tn       = " ++ show tn 
-      putStrLn $ "ty       = " ++ show ty
+  putStrLn "------------------------"
+  putStrLn $ "tvbs     = " ++ show tvbs
+  putStrLn $ "tn       = " ++ show tn 
+  putStrLn $ "ty       = " ++ show ty
 trace2 an nt1 nt2 lensArg1 lensArg2 lensArg3 lensArg4 = do
-      putStrLn "------"
-      putStrLn $ "an       = " ++ show an
-      putStrLn $ "nt1      = " ++ show nt1
-      putStrLn $ "nt2      = " ++ show nt2 
-      putStrLn $ "lensArg1 = " ++ show lensArg1
-      putStrLn $ "lensArg2 = " ++ show lensArg2
-      putStrLn $ "lensArg3 = " ++ show lensArg3
-      putStrLn $ "lensArg4 = " ++ show lensArg4
+  putStrLn "------"
+  putStrLn $ "an       = " ++ show an
+  putStrLn $ "nt1      = " ++ show nt1
+  putStrLn $ "nt2      = " ++ show nt2 
+  putStrLn $ "lensArg1 = " ++ show lensArg1
+  putStrLn $ "lensArg2 = " ++ show lensArg2
+  putStrLn $ "lensArg3 = " ++ show lensArg3
+  putStrLn $ "lensArg4 = " ++ show lensArg4
 
 ---------------------------------------------------------------------------------------------------
 -- makeClassy
