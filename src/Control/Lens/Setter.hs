@@ -2,7 +2,7 @@
 module Control.Lens.Setter where
 import Control.Monad.State.Class
 
-infixl 4 .=, %=
+infixl 4 .=, %=, +=, -=, *=, //=
 infixr 4 .~, %~, +~, -~, *~, /~
 infixl 1 &
 
