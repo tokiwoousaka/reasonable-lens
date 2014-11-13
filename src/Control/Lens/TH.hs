@@ -123,12 +123,6 @@ trace2 an nt1 nt2 lensArg1 lensArg2 lensArg3 lensArg4 = do
       putStrLn $ "lensArg3 = " ++ show lensArg3
       putStrLn $ "lensArg4 = " ++ show lensArg4
 
---createLensTypeSig [] tn ft = runQ [t| Lens $(conT tn) $(conT tn) $(return ft) $(return ft) |]
-    --let repTypeVar t = replaceTypeVar ft t 
-    --res <- runQ [t| Lens $(tCon tn a qnl) $(tCon tn b qnl) $(varT a) $(varT b) |]
-    --forallT (map PlainTV $ map snd qnl ++ [a, b]) (return []) $ return res
---createLensTypeSig tvbs tn _ = error "Still not supported Pattern :)"
-
 ---------------------------------------------------------------------------------------------------
 -- makeClassy
 
