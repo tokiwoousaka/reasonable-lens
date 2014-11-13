@@ -7,7 +7,9 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Data.List.Split
 import Data.Char
+import Data.List
 import Control.Lens.Lens
+import Control.Lens.Util.TH 
 
 makeLenses :: Name -> DecsQ
 makeLenses n = do
@@ -56,11 +58,11 @@ createLensExp fld = do
 makeAppFmap :: Exp -> Exp -> Exp
 makeAppFmap f v = AppE (AppE (VarE 'fmap) f) v
 
--- \r f -> (\a -> r { f = a })
+-- \r f -> (\x -> r { f = x })
 makeUpdFunc :: Name -> Name -> ExpQ
 makeUpdFunc r f = do
-  a <- newName "a"
-  return . LamE [VarP a] $ makeUpd r f (VarE a)
+  x <- newName "x"
+  return . LamE [VarP x] $ makeUpd r f (VarE x)
 
 -- \r f a -> r { f = a }
 makeUpd :: Name -> Name -> Exp -> Exp
@@ -74,30 +76,58 @@ makeComp f g v =  AppE (VarE f) $ AppE (VarE g) (VarE v)
 -- types
 
 createLensTypeSig :: [TyVarBndr] -> Name -> Type -> TypeQ
-createLensTypeSig [] tn ft = runQ [t| Lens $(conT tn) $(conT tn) $(return ft) $(return ft) |]
-createLensTypeSig tvbs tn (VarT ft) = let
+createLensTypeSig tvbs tn ty = do
+  --runIO $ trace1 tvbs tn ty
+  -- new var names
+  let an = type2List ty
+  nt1 <- mkNp "t1"
+  nt2 <- mkNp "t2" >>= \xs -> 
+    return (map (jgName an) $ zip nt1 (map snd xs))
+  -- lens args
+  let lensArg1 = mkCon tn nt1
+  let lensArg2 = mkCon tn nt2
+  let lensArg3 = repNp ty nt1
+  let lensArg4 = repNp ty nt2
+  --runIO $ trace2 an nt1 nt2 lensArg1 lensArg2 lensArg3 lensArg4
+  -- make result
+  res <- runQ [t| Lens $(return lensArg1) $(return lensArg2) $(return lensArg3) $(return lensArg4) |]
+  forallT (map (PlainTV . snd) $ nub (nt1 ++ nt2)) (return []) $ return res
+    where
+      mkNp :: String -> Q [(Name, Name)]
+      mkNp s = mapM (\_ -> newName s) tvbs >>= return . zip (map bndrName tvbs)
 
-  makeNameList :: TyVarBndr -> Q (TyVarBndr, Name)
-  makeNameList t = newName "t" >>= \x -> return (t, x)
+      repNp :: Type -> [(Name, Name)] -> Type
+      repNp t ns = foldr (.) id (map mkf ns) $ t
+        where
+          mkf :: (Name, Name) -> Type -> Type
+          mkf nt = uncurry replaceTypeVar $ nt
 
-  judgeType :: Name -> (TyVarBndr, Name) -> TypeQ
-  judgeType n (PlainTV p, m) = varT $ if ft == p then n else m
+      mkCon :: Name -> [(Name, Name)] -> Type
+      mkCon n t = foldl1 AppT $ ConT n : map (VarT . snd) t
 
-  nameList :: Name -> [(TyVarBndr, Name)] -> [TypeQ]
-  nameList n xs = map (judgeType n) xs
+      jgName :: [Name] -> ((Name, Name), Name) -> (Name, Name)
+      jgName xs ((n1, n2), n3) = if elem n1 xs then (n1, n3) else (n1, n2)
 
-  appCon :: Name -> [TypeQ] -> TypeQ
-  appCon n xs = foldl1 appT $ conT n : xs 
+trace1 tvbs tn ty = do
+      putStrLn "------------------------"
+      putStrLn $ "tvbs     = " ++ show tvbs
+      putStrLn $ "tn       = " ++ show tn 
+      putStrLn $ "ty       = " ++ show ty
+trace2 an nt1 nt2 lensArg1 lensArg2 lensArg3 lensArg4 = do
+      putStrLn "------"
+      putStrLn $ "an       = " ++ show an
+      putStrLn $ "nt1      = " ++ show nt1
+      putStrLn $ "nt2      = " ++ show nt2 
+      putStrLn $ "lensArg1 = " ++ show lensArg1
+      putStrLn $ "lensArg2 = " ++ show lensArg2
+      putStrLn $ "lensArg3 = " ++ show lensArg3
+      putStrLn $ "lensArg4 = " ++ show lensArg4
 
-  typeCon :: Name -> Name -> [(TyVarBndr, Name)] -> TypeQ
-  typeCon n m = appCon n . nameList m 
-
-  in do
-    a <- newName "a"
-    b <- newName "b"
-    qnl <- sequence $ map makeNameList tvbs
-    res <- runQ [t| Lens $(typeCon tn a qnl) $(typeCon tn b qnl) $(varT a) $(varT b) |]
-    forallT (map PlainTV $ map snd qnl ++ [a, b]) (return []) $ return res
+--createLensTypeSig [] tn ft = runQ [t| Lens $(conT tn) $(conT tn) $(return ft) $(return ft) |]
+    --let repTypeVar t = replaceTypeVar ft t 
+    --res <- runQ [t| Lens $(tCon tn a qnl) $(tCon tn b qnl) $(varT a) $(varT b) |]
+    --forallT (map PlainTV $ map snd qnl ++ [a, b]) (return []) $ return res
+--createLensTypeSig tvbs tn _ = error "Still not supported Pattern :)"
 
 ---------------------------------------------------------------------------------------------------
 -- makeClassy
