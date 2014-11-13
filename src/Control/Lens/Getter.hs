@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFunctor #-}
 module Control.Lens.Getter where
+import Control.Monad.State.Class
 infixl 8 ^.
 
 type Getting r s a = (a -> Accessor r a) -> s -> Accessor r s
@@ -11,6 +12,13 @@ foldOf :: Getting a s a -> s -> a
 foldOf l v = foldMapOf l id v
 
 (^.) = flip foldOf
+
+----
+
+use :: MonadState s m => Getting a s a -> m a
+use g = do
+  state <- get
+  return $ state^.g
 
 ----
 

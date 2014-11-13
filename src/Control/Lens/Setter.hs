@@ -2,8 +2,8 @@
 module Control.Lens.Setter where
 import Control.Monad.State.Class
 
-infixl 4 .=
-infixr 4 .~
+infixl 4 .=, %=
+infixr 4 .~, %~, +~, -~, *~, /~
 infixl 1 &
 
 type Setter s t a b = (a -> Mutator b) -> s -> Mutator t
@@ -19,10 +19,42 @@ set a v = over a $ const v
 
 ----
 
-(.=) :: MonadState s m => Setter s s a b -> b -> m ()
-s .=  v = do
+(%~) :: Setter s t a b -> (a -> b) -> s -> t
+(%~) = over
+
+(+~) :: Num a => Setter s t a a -> a -> s -> t
+s +~ x = over s (+ x)
+
+(-~) :: Num a => Setter s t a a -> a -> s -> t
+s -~ x = over s (subtract x)
+
+(*~) :: Num a => Setter s t a a -> a -> s -> t
+s *~ x = over s (* x)
+
+(/~) :: Fractional a => Setter s t a a -> a -> s -> t
+s /~ x = over s (/ x)
+
+----
+
+(%=) :: MonadState s m => Setter s s a a -> (a -> a) -> m ()
+s %= f = do
   state <- get
-  put $ state&s .~ v
+  put $ state&s %~ f
+
+(.=) :: MonadState s m => Setter s s a a -> a -> m ()
+s .= v = s %= (const v)
+
+(+=) :: (Num a, MonadState s m) => Setter s s a a -> a -> m ()
+s += x = s %= (+ x)
+
+(-=) :: (Num a, MonadState s m) => Setter s s a a -> a -> m ()
+s -= x = s %= (subtract x)
+
+(*=) :: (Num a, MonadState s m) => Setter s s a a -> a -> m ()
+s *= x = s %= (* x)
+
+(//=) :: (Fractional a, MonadState s m) => Setter s s a a -> a -> m ()
+s //= x = s %= (/ x)
 
 ----
 
