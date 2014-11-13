@@ -1,5 +1,8 @@
 {-# LANGUAGE DeriveFunctor #-}
 module Control.Lens.Setter where
+import Control.Monad.State.Class
+
+infixl 4 .=
 infixr 4 .~
 infixl 1 &
 
@@ -13,6 +16,13 @@ set a v = over a $ const v
 
 (.~) = set
 (&) = flip ($)
+
+----
+
+(.=) :: MonadState s m => Setter s s a b -> b -> m ()
+s .=  v = do
+  state <- get
+  put $ state&s .~ v
 
 ----
 
