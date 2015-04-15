@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
-module Control.Lens.Lens 
+module Control.Lens.Lens
   ( module Control.Lens.Getter
   , module Control.Lens.Setter
   , Lens(..)
