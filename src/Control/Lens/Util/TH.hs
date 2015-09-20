@@ -10,7 +10,7 @@ bndrName (KindedTV n _) = n
 
 replaceTypeVar :: Name -> Name -> Type -> Type
 replaceTypeVar l m (VarT n) = VarT $ judgeName l m n
-replaceTypeVar l m (ForallT tvbs c t) = 
+replaceTypeVar l m (ForallT tvbs c t) =
   ForallT (replaceTvbsVar l m tvbs) (replaceCxtVar l m c) (replaceTypeVar l m t)
 replaceTypeVar l m (AppT t1 t2) = AppT (replaceTypeVar l m t1) (replaceTypeVar l m t2)
 replaceTypeVar l m (SigT t k) = SigT (replaceTypeVar l m t) k
@@ -26,7 +26,7 @@ replaceCxtVar l m = map rep
 replaceTvbsVar :: Name -> Name -> [TyVarBndr] -> [TyVarBndr]
 replaceTvbsVar l m = map rep
   where
-    rep :: TyVarBndr -> TyVarBndr 
+    rep :: TyVarBndr -> TyVarBndr
     rep (PlainTV n) = PlainTV $ judgeName l m n
     rep (KindedTV n k) = KindedTV (judgeName l m n) k
 
@@ -56,4 +56,3 @@ tvbs2List = map rep
     rep :: TyVarBndr -> Name
     rep (PlainTV n) = n
     rep (KindedTV n k) = n
-
