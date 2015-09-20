@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                reasonable-lens
-version:             0.2.1.1
+version:             0.3
 synopsis:            Lens implementation. It is more small but adequately.
 description:         Just size lens implementation.
 homepage:            https://github.com/tokiwoousaka/reasonable-lens
