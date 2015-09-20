@@ -20,8 +20,8 @@ replaceCxtVar :: Name -> Name -> Cxt -> Cxt
 replaceCxtVar l m = map rep
   where
     rep :: Pred -> Pred
-    rep (ClassP n ts) = ClassP n $ map (replaceTypeVar l m) ts
-    rep (EqualP t1 t2) = EqualP (replaceTypeVar l m t1) (replaceTypeVar l m t2)
+    rep (AppT n t) = AppT n $ replaceTypeVar l m t
+    rep t = replaceTypeVar l m t
 
 replaceTvbsVar :: Name -> Name -> [TyVarBndr] -> [TyVarBndr]
 replaceTvbsVar l m = map rep
@@ -47,8 +47,8 @@ cxt2List :: Cxt -> [Name]
 cxt2List = concatMap rep
   where
     rep :: Pred -> [Name]
-    rep (ClassP n ts) = concatMap type2List ts
-    rep (EqualP t1 t2) = type2List t1 ++ type2List t2
+    rep (AppT n t) = type2List t
+    rep t = type2List t
 
 tvbs2List :: [TyVarBndr] -> [Name]
 tvbs2List = map rep
